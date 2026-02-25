@@ -3,25 +3,21 @@
 import { useState } from "react";
 
 export default function GamePage() {
-  // 기본 경기 정보
   const [date, setDate] = useState("");
   const [gameNumber, setGameNumber] = useState("");
 
-  // 팀 정보
   const [teamAName, setTeamAName] = useState("");
   const [teamAPlayers, setTeamAPlayers] = useState("");
 
   const [teamBName, setTeamBName] = useState("");
   const [teamBPlayers, setTeamBPlayers] = useState("");
 
-  // 쿼터 입력
   const [quarter, setQuarter] = useState("");
   const [finalAScore, setFinalAScore] = useState("");
   const [finalBScore, setFinalBScore] = useState("");
 
   const [quarters, setQuarters] = useState([]);
 
-  // 쿼터 저장
   const saveQuarterResult = () => {
     if (!["1", "2", "3", "4"].includes(quarter)) {
       alert("1~4 쿼터만 선택 가능합니다.");
@@ -33,34 +29,26 @@ export default function GamePage() {
       return;
     }
 
-    setQuarters((prev) => [
-      ...prev,
-      {
-        quarter: Number(quarter),
-        finalScore: {
-          A: Number(finalAScore),
-          B: Number(finalBScore),
-        },
+    const newQuarter = {
+      quarter: Number(quarter),
+      finalScore: {
+        A: Number(finalAScore),
+        B: Number(finalBScore),
       },
-    ]);
+    };
+
+    setQuarters((prev) => [...prev, newQuarter]);
 
     setQuarter("");
     setFinalAScore("");
     setFinalBScore("");
   };
 
-  // 총합 계산
-  const totalAScore = quarters.reduce(
-    (sum, q) => sum + q.finalScore.A,
-    0
-  );
+  // 마지막 쿼터 점수 = 현재 최종 점수
+  const latestQuarter = quarters.length > 0
+    ? quarters[quarters.length - 1]
+    : null;
 
-  const totalBScore = quarters.reduce(
-    (sum, q) => sum + q.finalScore.B,
-    0
-  );
-
-  // 경기 전체 저장
   const saveGame = () => {
     if (!date || !gameNumber || !teamAName || !teamBName) {
       alert("경기 기본 정보를 모두 입력하세요.");
@@ -81,10 +69,9 @@ export default function GamePage() {
         },
       },
       quarters,
-      totalScore: {
-        A: totalAScore,
-        B: totalBScore,
-      },
+      finalScore: latestQuarter
+        ? latestQuarter.finalScore
+        : { A: 0, B: 0 },
     };
 
     console.log("저장될 데이터:", gameData);
@@ -182,7 +169,7 @@ export default function GamePage() {
 
       <button
         onClick={saveQuarterResult}
-        style={{ marginTop: 15, padding: "5px 10px" }}
+        style={{ marginTop: 15 }}
       >
         쿼터 저장
       </button>
@@ -200,17 +187,14 @@ export default function GamePage() {
 
       <p>날짜: {date}</p>
       <p>Game: {gameNumber}</p>
-      <p>
-        A 팀: {teamAName} ({teamAPlayers})
-      </p>
-      <p>
-        B 팀: {teamBName} ({teamBPlayers})
-      </p>
 
-      <h3 style={{ marginTop: 20 }}>
-        🔢 현재 총점 : {teamAName || "A"} {totalAScore} -{" "}
-        {teamBName || "B"} {totalBScore}
-      </h3>
+      {latestQuarter && (
+        <h3>
+          🔢 현재 최종 점수 : {teamAName || "A"}{" "}
+          {latestQuarter.finalScore.A} -{" "}
+          {teamBName || "B"} {latestQuarter.finalScore.B}
+        </h3>
+      )}
 
       <button
         onClick={saveGame}
