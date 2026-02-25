@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { db } from "@/lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
 
 export default function GamePage() {
   const [date, setDate] = useState("");
@@ -25,7 +27,7 @@ export default function GamePage() {
     }
 
     if (finalAScore === "" || finalBScore === "") {
-      alert("점수를 모두 입력하세요.");
+      alert("점수를 입력하세요.");
       return;
     }
 
@@ -44,14 +46,14 @@ export default function GamePage() {
     setFinalBScore("");
   };
 
-  // 마지막 쿼터 점수 = 현재 최종 점수
-  const latestQuarter = quarters.length > 0
-    ? quarters[quarters.length - 1]
-    : null;
+  const latestQuarter =
+    quarters.length > 0
+      ? quarters[quarters.length - 1].finalScore
+      : { A: 0, B: 0 };
 
-  const saveGame = () => {
+  const saveGame = async () => {
     if (!date || !gameNumber || !teamAName || !teamBName) {
-      alert("경기 기본 정보를 모두 입력하세요.");
+      alert("경기 기본 정보를 입력하세요.");
       return;
     }
 
@@ -69,13 +71,18 @@ export default function GamePage() {
         },
       },
       quarters,
-      finalScore: latestQuarter
-        ? latestQuarter.finalScore
-        : { A: 0, B: 0 },
+      finalScore: latestQuarter,
+      createdAt: new Date(),
     };
 
-    console.log("저장될 데이터:", gameData);
-    alert("경기 데이터가 콘솔에 저장되었습니다.");
+    try {
+      await addDoc(collection(db, "games"), gameData);
+      alert("경기 저장 완료 🔥");
+      setQuarters([]);
+    } catch (error) {
+      console.error(error);
+      alert("저장 실패");
+    }
   };
 
   return (
@@ -84,127 +91,84 @@ export default function GamePage() {
 
       <h2>📅 경기 정보</h2>
 
-      <div>
-        <label>날짜: </label>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
-      </div>
-
-      <div style={{ marginTop: 10 }}>
-        <label>Game 번호: </label>
-        <input
-          value={gameNumber}
-          onChange={(e) => setGameNumber(e.target.value)}
-        />
-      </div>
+      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+      <br /><br />
+      <input
+        placeholder="Game 번호"
+        value={gameNumber}
+        onChange={(e) => setGameNumber(e.target.value)}
+      />
 
       <h2 style={{ marginTop: 30 }}>👥 팀 정보</h2>
 
-      <div>
-        <h3>A 팀</h3>
-        <input
-          placeholder="팀 이름"
-          value={teamAName}
-          onChange={(e) => setTeamAName(e.target.value)}
-        />
-        <br />
-        <input
-          style={{ marginTop: 5 }}
-          placeholder="선수들 (콤마로 구분)"
-          value={teamAPlayers}
-          onChange={(e) => setTeamAPlayers(e.target.value)}
-        />
-      </div>
+      <h3>A 팀</h3>
+      <input
+        placeholder="팀 이름"
+        value={teamAName}
+        onChange={(e) => setTeamAName(e.target.value)}
+      />
+      <br />
+      <input
+        placeholder="선수들 (콤마 구분)"
+        value={teamAPlayers}
+        onChange={(e) => setTeamAPlayers(e.target.value)}
+      />
 
-      <div style={{ marginTop: 20 }}>
-        <h3>B 팀</h3>
-        <input
-          placeholder="팀 이름"
-          value={teamBName}
-          onChange={(e) => setTeamBName(e.target.value)}
-        />
-        <br />
-        <input
-          style={{ marginTop: 5 }}
-          placeholder="선수들 (콤마로 구분)"
-          value={teamBPlayers}
-          onChange={(e) => setTeamBPlayers(e.target.value)}
-        />
-      </div>
+      <h3 style={{ marginTop: 20 }}>B 팀</h3>
+      <input
+        placeholder="팀 이름"
+        value={teamBName}
+        onChange={(e) => setTeamBName(e.target.value)}
+      />
+      <br />
+      <input
+        placeholder="선수들 (콤마 구분)"
+        value={teamBPlayers}
+        onChange={(e) => setTeamBPlayers(e.target.value)}
+      />
 
-      <h2 style={{ marginTop: 40 }}>📊 쿼터 최종 점수 입력</h2>
+      <h2 style={{ marginTop: 40 }}>📊 쿼터 점수 입력</h2>
 
-      <div>
-        <label>쿼터: </label>
-        <select
-          value={quarter}
-          onChange={(e) => setQuarter(e.target.value)}
-        >
-          <option value="">쿼터 선택</option>
-          <option value="1">1 쿼터</option>
-          <option value="2">2 쿼터</option>
-          <option value="3">3 쿼터</option>
-          <option value="4">4 쿼터</option>
-        </select>
-      </div>
+      <select value={quarter} onChange={(e) => setQuarter(e.target.value)}>
+        <option value="">쿼터 선택</option>
+        <option value="1">1 쿼터</option>
+        <option value="2">2 쿼터</option>
+        <option value="3">3 쿼터</option>
+        <option value="4">4 쿼터</option>
+      </select>
 
-      <div style={{ marginTop: 10 }}>
-        <label>A 팀 점수: </label>
-        <input
-          value={finalAScore}
-          onChange={(e) => setFinalAScore(e.target.value)}
-        />
-      </div>
+      <br /><br />
+      <input
+        placeholder="A 팀 점수"
+        value={finalAScore}
+        onChange={(e) => setFinalAScore(e.target.value)}
+      />
+      <br />
+      <input
+        placeholder="B 팀 점수"
+        value={finalBScore}
+        onChange={(e) => setFinalBScore(e.target.value)}
+      />
 
-      <div style={{ marginTop: 10 }}>
-        <label>B 팀 점수: </label>
-        <input
-          value={finalBScore}
-          onChange={(e) => setFinalBScore(e.target.value)}
-        />
-      </div>
-
-      <button
-        onClick={saveQuarterResult}
-        style={{ marginTop: 15 }}
-      >
-        쿼터 저장
-      </button>
+      <br /><br />
+      <button onClick={saveQuarterResult}>쿼터 저장</button>
 
       <h3 style={{ marginTop: 30 }}>📋 저장된 쿼터</h3>
-
-      {quarters.map((q, index) => (
-        <div key={index}>
+      {quarters.map((q, i) => (
+        <div key={i}>
           Q{q.quarter} : {teamAName || "A"} {q.finalScore.A} -{" "}
           {teamBName || "B"} {q.finalScore.B}
         </div>
       ))}
 
-      <h2 style={{ marginTop: 40 }}>📌 경기 요약</h2>
-
-      <p>날짜: {date}</p>
-      <p>Game: {gameNumber}</p>
-
-      {latestQuarter && (
-        <h3>
-          🔢 현재 최종 점수 : {teamAName || "A"}{" "}
-          {latestQuarter.finalScore.A} -{" "}
-          {teamBName || "B"} {latestQuarter.finalScore.B}
-        </h3>
-      )}
+      <h2 style={{ marginTop: 30 }}>
+        🔢 현재 최종 점수 : {teamAName || "A"} {latestQuarter.A} -{" "}
+        {teamBName || "B"} {latestQuarter.B}
+      </h2>
 
       <button
         onClick={saveGame}
-        style={{
-          marginTop: 30,
-          padding: "10px 15px",
-          backgroundColor: "black",
-          color: "white",
-          cursor: "pointer",
-        }}
+        style={{ marginTop: 20, padding: "10px 15px" }}
       >
         💾 경기 전체 저장
       </button>
