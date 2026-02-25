@@ -23,8 +23,13 @@ export default function GamePage() {
 
   // 쿼터 저장
   const saveQuarterResult = () => {
-    if (!quarter || finalAScore === "" || finalBScore === "") {
-      alert("쿼터와 점수를 모두 입력하세요.");
+    if (!["1", "2", "3", "4"].includes(quarter)) {
+      alert("1~4 쿼터만 선택 가능합니다.");
+      return;
+    }
+
+    if (finalAScore === "" || finalBScore === "") {
+      alert("점수를 모두 입력하세요.");
       return;
     }
 
@@ -43,6 +48,17 @@ export default function GamePage() {
     setFinalAScore("");
     setFinalBScore("");
   };
+
+  // 총합 계산
+  const totalAScore = quarters.reduce(
+    (sum, q) => sum + q.finalScore.A,
+    0
+  );
+
+  const totalBScore = quarters.reduce(
+    (sum, q) => sum + q.finalScore.B,
+    0
+  );
 
   // 경기 전체 저장
   const saveGame = () => {
@@ -65,6 +81,10 @@ export default function GamePage() {
         },
       },
       quarters,
+      totalScore: {
+        A: totalAScore,
+        B: totalBScore,
+      },
     };
 
     console.log("저장될 데이터:", gameData);
@@ -75,7 +95,6 @@ export default function GamePage() {
     <div style={{ padding: 30 }}>
       <h1>🏀 경기 기록</h1>
 
-      {/* 경기 기본 정보 */}
       <h2>📅 경기 정보</h2>
 
       <div>
@@ -95,7 +114,6 @@ export default function GamePage() {
         />
       </div>
 
-      {/* 팀 정보 */}
       <h2 style={{ marginTop: 30 }}>👥 팀 정보</h2>
 
       <div>
@@ -130,16 +148,20 @@ export default function GamePage() {
         />
       </div>
 
-      {/* 쿼터 입력 */}
       <h2 style={{ marginTop: 40 }}>📊 쿼터 최종 점수 입력</h2>
 
       <div>
         <label>쿼터: </label>
-        <input
+        <select
           value={quarter}
           onChange={(e) => setQuarter(e.target.value)}
-          placeholder="예: 1"
-        />
+        >
+          <option value="">쿼터 선택</option>
+          <option value="1">1 쿼터</option>
+          <option value="2">2 쿼터</option>
+          <option value="3">3 쿼터</option>
+          <option value="4">4 쿼터</option>
+        </select>
       </div>
 
       <div style={{ marginTop: 10 }}>
@@ -165,7 +187,6 @@ export default function GamePage() {
         쿼터 저장
       </button>
 
-      {/* 저장된 쿼터 목록 */}
       <h3 style={{ marginTop: 30 }}>📋 저장된 쿼터</h3>
 
       {quarters.map((q, index) => (
@@ -175,7 +196,6 @@ export default function GamePage() {
         </div>
       ))}
 
-      {/* 현재 경기 요약 */}
       <h2 style={{ marginTop: 40 }}>📌 경기 요약</h2>
 
       <p>날짜: {date}</p>
@@ -187,7 +207,11 @@ export default function GamePage() {
         B 팀: {teamBName} ({teamBPlayers})
       </p>
 
-      {/* 경기 전체 저장 버튼 */}
+      <h3 style={{ marginTop: 20 }}>
+        🔢 현재 총점 : {teamAName || "A"} {totalAScore} -{" "}
+        {teamBName || "B"} {totalBScore}
+      </h3>
+
       <button
         onClick={saveGame}
         style={{
