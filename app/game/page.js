@@ -44,6 +44,33 @@ export default function GamePage() {
     setFinalBScore("");
   };
 
+  const saveGame = () => {
+  if (!date || !gameNumber || !teamAName || !teamBName) {
+    alert("경기 기본 정보를 모두 입력하세요.");
+    return;
+  }
+
+  const gameData = {
+    date,
+    gameNumber: Number(gameNumber),
+    teams: {
+      A: {
+        name: teamAName,
+        players: teamAPlayers.split(",").map(p => p.trim())
+      },
+      B: {
+        name: teamBName,
+        players: teamBPlayers.split(",").map(p => p.trim())
+      }
+    },
+    quarters
+  };
+
+  console.log("저장될 데이터:", gameData);
+
+  alert("경기 데이터가 콘솔에 저장 준비되었습니다.");
+};
+  
   return (
     <div style={{ padding: 30 }}>
       <h1>🏀 경기 기록</h1>
@@ -162,3 +189,15 @@ export default function GamePage() {
     </div>
   );
 }
+<button
+  onClick={saveGame}
+  style={{
+    marginTop: 30,
+    padding: "10px 15px",
+    backgroundColor: "black",
+    color: "white",
+    cursor: "pointer"
+  }}
+>
+  💾 경기 전체 저장
+</button>
