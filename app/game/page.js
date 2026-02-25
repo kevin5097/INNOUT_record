@@ -1,4 +1,3 @@
-THIS_SHOULD_BREAK_THE_BUILD
 "use client";
 
 import { useState } from "react";
